@@ -3,54 +3,50 @@ package com.pluralsight;
 import java.sql.*;
 
 public class App {
+    public static void main(String[] args) throws SQLException, ClassNotFoundException {
 
-
-    public static void main(String[] args) {
-
-        try {
-
-            // 1. open a connection to the database
-            // use the database URL to point to the correct database
-
-            //this is like opening MySQL workbench and clicking localhost
-            Connection connection;
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", "root", "yearup");
-
-
-            // create statement
-            // the statement is tied to the open connection
-
-            //like me opening a new query window
-            Statement statement = connection.createStatement();
-
-            // define your query
-
-            //like me typing the query in the new query windows
-            String query = "SELECT  ProductName FROM Products;";
-
-            // 2. Execute your query
-
-            //this is like me clicking the lightning bolt
-            ResultSet results = statement.executeQuery(query);
-
-            // process the results
-            //this is a way to view the result set but java doesnt have a spreadsheet view for us
-            while (results.next()) {
-                //String product = results.getString("ProductName");
-                //or
-                String product = results.getString(1);
-                System.out.println(product);
-            }
-
-            // 3. Close the connection
-
-            //closing mysql workbench
-            connection.close();
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        //making sure we passed in 2 arguments from the command line when we run the app
+        //this is done with the app configuration in intellij (page 45 of the wb)
+        if (args.length != 2) {
+            System.out.println(
+                    "Application needs two arguments to run: " +
+                            "java com.pluralsight.UsingDriverManager <username> <password>"
+            );
+            System.exit(1);
         }
 
+        // get the user name and password from the command line args
+        String username = args[0];
+        String password = args[1];
 
+        // create the connection and prepared statement
+        Connection connection = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/northwind", username, password
+        );
+
+        //start our prepared statement
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT ProductName FROM Products WHERE ProductID = ?"
+        );
+
+        // find the question mark by index and provide its safe value
+        preparedStatement.setInt(1, 14);
+
+        // execute the query
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        // loop thru the results
+        while (resultSet.next()) {
+            // process the data
+            System.out.printf(
+                    "productName = %s\n",
+                    resultSet.getString("ProductName")
+            );
+        }
+
+        // close the resources
+        resultSet.close();
+        preparedStatement.close();
+        connection.close();
     }
 }
