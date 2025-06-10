@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class App {
     public static void main(String[] args) {
 
-        //did I pass e command line arguments in at runtime
+        // did I pass command line arguments in at runtime
         if (args.length != 2) {
             System.out.println(
                     "Application needs two arguments to run: " +
@@ -20,147 +20,93 @@ public class App {
 
         Scanner myScanner = new Scanner(System.in);
 
-        //Connect to the DB
-        Connection connection = null;
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password)) {
 
-        try {
-            // create the connection and prepared statement
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password);
+            while (true) {
+
+                System.out.println("What do you want to do?");
+                System.out.println("\t1) Display all products");
+                System.out.println("\t2) Display all customers");
+                System.out.println("\t0) Exit");
+                System.out.print("Select an option: ");
+
+                switch (myScanner.nextInt()) {
+                    case 1:
+                        displayAllProducts(connection);
+                        break;
+                    case 2:
+                        displayAllCustomers(connection);
+                        break;
+                    case 0:
+                        System.out.println("Bye Bye!");
+                        System.exit(0);
+                    default:
+                        System.out.println("Invalid Choice");
+                }
+
+            }
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
-        while(true) {
-
-            System.out.println("What do you want to do?");
-            System.out.println("\t1) Display all products");
-            System.out.println("\t2) Display all customers");
-            System.out.println("\t0) Exit");
-            System.out.print("Select an option: ");
-
-            switch (myScanner.nextInt()) {
-                case 1:
-                    displayAllProducts(connection);
-                    break;
-                case 2:
-                    displayAllCustomers(connection);
-                    break;
-                case 0:
-                    System.out.println("Bye Bye!");
-
-                    //clost the connection to the DB
-                    if (connection != null) {
-                        try {
-                            connection.close();
-                            System.out.println("DB Connection closed");
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    System.exit(0);
-
-
-                default:
-                    System.out.println("InvalidChoice");
-            }
-
-        }
     }
 
-    public static void displayAllCustomers(Connection connection){
+    public static void displayAllCustomers(Connection connection) {
 
-        PreparedStatement preparedStatement = null;
-        ResultSet resultSet = null;
+        try (
+                // initialize the preparedStatement
+                PreparedStatement preparedStatement = connection.prepareStatement(
+                        "SELECT " +
+                                "   ContactName, " +
+                                "   CompanyName, " +
+                                "   City, " +
+                                "   Country, " +
+                                "   Phone  " +
+                                "FROM " +
+                                "   Customers " +
+                                "ORDER BY " +
+                                "   Country");
 
-        try {
+                // execute the query
+                ResultSet resultSet = preparedStatement.executeQuery()
+        ) {
+            // loop through the results
+            printResultSet(resultSet);
 
-            //initialze the preparedStatement we created above
-            preparedStatement = connection.prepareStatement("" +
-                    "SELECT " +
-                    "   ContactName, " +
-                    "   CompanyName," +
-                    "   City," +
-                    "   Country," +
-                    "   Phone  " +
-                    "FROM " +
-                    "   Customers " +
-                    "ORDER BY " +
-                    "   Country");
-
-            // execute the query
-            resultSet = preparedStatement.executeQuery();
-
-            // loop thru the results
-           printResultSet(resultSet);
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            // close the resources
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
     }
 
-    public static void displayAllProducts(Connection connection){
+    public static void displayAllProducts(Connection connection) {
 
-        PreparedStatement preparedStatement = null;
-        ResultSet resultSet = null;
+        try (
+                // initialize the preparedStatement
+                PreparedStatement preparedStatement = connection.prepareStatement(
+                        "SELECT " +
+                                "   ProductName, " +
+                                "   UnitPrice, " +
+                                "   UnitsInStock " +
+                                "FROM " +
+                                "   Products " +
+                                "ORDER BY " +
+                                "   ProductName");
 
-        try {
+                // execute the query
+                ResultSet resultSet = preparedStatement.executeQuery()
+        ) {
+            // loop through the results
+            printResultSet(resultSet);
 
-            //initialze the preparedStatement we created above
-            preparedStatement = connection.prepareStatement("" +
-                    "SELECT " +
-                    "   ProductName, " +
-                    "   UnitPrice," +
-                    "   UnitsInStock " +
-                    "FROM " +
-                    "   Products " +
-                    "ORDER BY " +
-                    "   ProductName");
-
-            // execute the query
-            resultSet = preparedStatement.executeQuery();
-
-            // loop thru the results
-           printResultSet(resultSet);
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            // close the resources
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                    System.out.println("ResultSet closed");
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                    System.out.println("Prepared Statement Closed");
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
+
     }
 
+    // loop over the result set and print out the columns for each result
     public static void printResultSet(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
@@ -174,6 +120,5 @@ public class App {
             System.out.println(); // new line after each row
         }
     }
-
 
 }
