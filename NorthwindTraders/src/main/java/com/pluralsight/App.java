@@ -27,6 +27,7 @@ public class App {
                 System.out.println("What do you want to do?");
                 System.out.println("\t1) Display all products");
                 System.out.println("\t2) Display all customers");
+                System.out.println("\t3) Display all categories");
                 System.out.println("\t0) Exit");
                 System.out.print("Select an option: ");
 
@@ -36,6 +37,29 @@ public class App {
                         break;
                     case 2:
                         displayAllCustomers(connection);
+                        break;
+                    case 3:
+                        displayAllCategories(connection);
+
+                        //ask them if they want to see products for a specific category
+                        System.out.println("Do you want to see the products in a category?");
+                        System.out.println("\t1) Yes");
+                        System.out.println("\t2) No");
+                        System.out.print("Select an option: ");
+
+                        switch (myScanner.nextInt()) {
+                            case 1:
+
+                                System.out.print("What category id would you like to view products for?: ");
+                                int catID = myScanner.nextInt();
+                                displayProductsByCategory(connection, catID);
+
+                                break;
+
+                            default:
+                                System.out.println("Ok, back to the main menu then!");
+                        }
+
                         break;
                     case 0:
                         System.out.println("Bye Bye!");
@@ -106,10 +130,39 @@ public class App {
 
     }
 
+    public static void displayAllCategories(Connection connection) {
+
+        try (
+                // initialize the preparedStatement
+                PreparedStatement preparedStatement = connection.prepareStatement(
+                        "SELECT " +
+                                "   CategoryID, " +
+                                "   CategoryName " +
+                                "FROM " +
+                                "   Categories " +
+                                "ORDER BY " +
+                                "   CategoryId");
+
+                // execute the query
+                ResultSet resultSet = preparedStatement.executeQuery()
+        ) {
+            // loop through the results
+            printResultSet(resultSet);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     // loop over the result set and print out the columns for each result
     public static void printResultSet(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
+
+        if(!rs.next()){
+            System.out.println("No results for Found!");
+        }
 
         while (rs.next()) {
             for (int i = 1; i <= columnCount; i++) {
@@ -119,6 +172,38 @@ public class App {
             }
             System.out.println(); // new line after each row
         }
+    }
+
+    public static void displayProductsByCategory(Connection connection, int categoryId) {
+
+        try (
+                // initialize the preparedStatement
+                PreparedStatement preparedStatement = connection.prepareStatement(
+                        "SELECT " +
+                                "   ProductName, " +
+                                "   UnitPrice, " +
+                                "   UnitsInStock " +
+                                "FROM " +
+                                "   Products " +
+                                "WHERE" +
+                                "   CategoryId = ? " +
+                                "ORDER BY " +
+                                "   ProductName");
+
+        ) {
+
+            preparedStatement.setInt(1, categoryId);
+
+            // execute the query
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                // loop through the results
+                printResultSet(resultSet);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }
