@@ -47,7 +47,20 @@ public class App {
                     break;
                 case 0:
                     System.out.println("Bye Bye!");
+
+                    //clost the connection to the DB
+                    if (connection != null) {
+                        try {
+                            connection.close();
+                            System.out.println("DB Connection closed");
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
                     System.exit(0);
+
+
                 default:
                     System.out.println("InvalidChoice");
             }
@@ -79,11 +92,7 @@ public class App {
             resultSet = preparedStatement.executeQuery();
 
             // loop thru the results
-            while (resultSet.next()) {
-                // process the data
-                System.out.printf("ContactName = %s, CompanyName = %s, City = %s, Country = %s, Phone = %s;\n",
-                        resultSet.getString(1), resultSet.getString(2), resultSet.getString(3), resultSet.getString(4), resultSet.getString(5));
-            }
+           printResultSet(resultSet);
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -98,13 +107,6 @@ public class App {
             if (preparedStatement != null) {
                 try {
                     preparedStatement.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (connection != null) {
-                try {
-                    connection.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -137,11 +139,7 @@ public class App {
             resultSet = preparedStatement.executeQuery();
 
             // loop thru the results
-            while (resultSet.next()) {
-                // process the data
-                System.out.printf("ProductName = %s, UnitPrice = %s, UnitsInStock = %s;\n",
-                        resultSet.getString(1), resultSet.getDouble(2), resultSet.getInt(3));
-            }
+           printResultSet(resultSet);
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -149,6 +147,7 @@ public class App {
             if (resultSet != null) {
                 try {
                     resultSet.close();
+                    System.out.println("ResultSet closed");
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -156,18 +155,27 @@ public class App {
             if (preparedStatement != null) {
                 try {
                     preparedStatement.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (connection != null) {
-                try {
-                    connection.close();
+                    System.out.println("Prepared Statement Closed");
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
         }
     }
+
+    public static void printResultSet(ResultSet rs) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+
+        while (rs.next()) {
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnName(i);
+                String value = rs.getString(i); // generic, works for most types
+                System.out.print(columnName + ": " + value + "  ");
+            }
+            System.out.println(); // new line after each row
+        }
+    }
+
 
 }
