@@ -20,10 +20,11 @@ public class App {
 
         Scanner myScanner = new Scanner(System.in);
 
+        //Connect to the DB
+        Connection connection = null;
+
         while(true) {
 
-            //Connect to the DB
-            Connection connection = null;
 
             try {
                 // create the connection and prepared statement
