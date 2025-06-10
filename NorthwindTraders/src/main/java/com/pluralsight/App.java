@@ -4,7 +4,7 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class App {
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
+    public static void main(String[] args) {
 
         //did I pass e command line arguments in at runtime
         if (args.length != 2) {
@@ -23,15 +23,14 @@ public class App {
         //Connect to the DB
         Connection connection = null;
 
+        try {
+            // create the connection and prepared statement
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
         while(true) {
-
-
-            try {
-                // create the connection and prepared statement
-                connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/northwind", username, password);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
 
             System.out.println("What do you want to do?");
             System.out.println("\t1) Display all products");
@@ -133,8 +132,6 @@ public class App {
                     "   Products " +
                     "ORDER BY " +
                     "   ProductName");
-
-            System.out.println(preparedStatement.toString());
 
             // execute the query
             resultSet = preparedStatement.executeQuery();
