@@ -162,16 +162,17 @@ public class App {
 
         if(!rs.next()){
             System.out.println("No results for Found!");
+            return;
         }
 
-        while (rs.next()) {
+        do{
             for (int i = 1; i <= columnCount; i++) {
                 String columnName = metaData.getColumnName(i);
                 String value = rs.getString(i); // generic, works for most types
                 System.out.print(columnName + ": " + value + "  ");
             }
             System.out.println(); // new line after each row
-        }
+        } while(rs.next());
     }
 
     public static void displayProductsByCategory(Connection connection, int categoryId) {
