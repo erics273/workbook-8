@@ -161,18 +161,26 @@ public class App {
         }
     }
 
+    // loop over the result set and print out the columns for each result
     public static void printResultSet(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
 
-        while (rs.next()) {
+        if(!rs.next()){
+            System.out.println("No results for Found!");
+            return;
+        }
+
+        do{
+            
             for (int i = 1; i <= columnCount; i++) {
                 String columnName = metaData.getColumnName(i);
                 String value = rs.getString(i); // generic, works for most types
                 System.out.print(columnName + ": " + value + "  ");
             }
             System.out.println(); // new line after each row
-        }
+
+        } while(rs.next());
     }
 
 
