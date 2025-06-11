@@ -22,73 +22,77 @@ public class App {
 
         Scanner myScanner = new Scanner(System.in);
 
-        try (BasicDataSource dataSource = new BasicDataSource(); ) {
+        //create the datasource
+        BasicDataSource dataSource = new BasicDataSource();
+        // Configure the datasource
+        dataSource.setUrl("jdbc:mysql://localhost:3306/northwind");
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
 
-            // Configure the datasource
-            dataSource.setUrl("jdbc:mysql://localhost:3306/northwind");
-            dataSource.setUsername(username);
-            dataSource.setPassword(password);
+        while (true) {
 
-            Connection connection = dataSource.getConnection();
+            System.out.println("What do you want to do?");
+            System.out.println("\t1) Display all products");
+            System.out.println("\t2) Display all customers");
+            System.out.println("\t3) Display all categories");
+            System.out.println("\t0) Exit");
+            System.out.print("Select an option: ");
 
-            while (true) {
+            switch (myScanner.nextInt()) {
+                case 1:
+                    displayAllProducts(dataSource);
+                    break;
+                case 2:
+                    displayAllCustomers(dataSource);
+                    break;
+                case 3:
+                    displayAllCategories(dataSource);
 
-                System.out.println("What do you want to do?");
-                System.out.println("\t1) Display all products");
-                System.out.println("\t2) Display all customers");
-                System.out.println("\t3) Display all categories");
-                System.out.println("\t0) Exit");
-                System.out.print("Select an option: ");
+                    //ask them if they want to see products for a specific category
+                    System.out.println("Do you want to see the products in a category?");
+                    System.out.println("\t1) Yes");
+                    System.out.println("\t2) No");
+                    System.out.print("Select an option: ");
 
-                switch (myScanner.nextInt()) {
-                    case 1:
-                        displayAllProducts(connection);
-                        break;
-                    case 2:
-                        displayAllCustomers(connection);
-                        break;
-                    case 3:
-                        displayAllCategories(connection);
+                    switch (myScanner.nextInt()) {
+                        case 1:
 
-                        //ask them if they want to see products for a specific category
-                        System.out.println("Do you want to see the products in a category?");
-                        System.out.println("\t1) Yes");
-                        System.out.println("\t2) No");
-                        System.out.print("Select an option: ");
+                            System.out.print("What category id would you like to view products for?: ");
+                            int catID = myScanner.nextInt();
+                            displayProductsByCategory(dataSource, catID);
 
-                        switch (myScanner.nextInt()) {
-                            case 1:
+                            break;
 
-                                System.out.print("What category id would you like to view products for?: ");
-                                int catID = myScanner.nextInt();
-                                displayProductsByCategory(connection, catID);
+                        default:
+                            System.out.println("Ok, back to the main menu then!");
+                    }
 
-                                break;
+                    break;
+                case 0:
+                    System.out.println("Bye Bye!");
 
-                            default:
-                                System.out.println("Ok, back to the main menu then!");
-                        }
-
-                        break;
-                    case 0:
-                        System.out.println("Bye Bye!");
-                        System.exit(0);
-                    default:
-                        System.out.println("Invalid Choice");
-                }
-
+                    //close the DataSource
+                    try {
+                        dataSource.close();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.exit(0);
+                default:
+                    System.out.println("Invalid Choice");
             }
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
 
     }
 
-    public static void displayAllCustomers(Connection connection) {
+    public static void displayAllCustomers(BasicDataSource datasource) {
 
         try (
+                //get a new connection from the pool for this query
+                Connection connection = datasource.getConnection();
                 // initialize the preparedStatement
+
                 PreparedStatement preparedStatement = connection.prepareStatement(
                         "SELECT " +
                                 "   ContactName, " +
@@ -113,9 +117,12 @@ public class App {
 
     }
 
-    public static void displayAllProducts(Connection connection) {
+    public static void displayAllProducts(BasicDataSource datasource) {
 
         try (
+                //get a new connection from the pool for this query
+                Connection connection = datasource.getConnection();
+
                 // initialize the preparedStatement
                 PreparedStatement preparedStatement = connection.prepareStatement(
                         "SELECT " +
@@ -139,9 +146,11 @@ public class App {
 
     }
 
-    public static void displayAllCategories(Connection connection) {
+    public static void displayAllCategories(BasicDataSource datasource) {
 
         try (
+                //get a new connection from the pool for this query
+                Connection connection = datasource.getConnection();
                 // initialize the preparedStatement
                 PreparedStatement preparedStatement = connection.prepareStatement(
                         "SELECT " +
@@ -169,7 +178,7 @@ public class App {
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
 
-        if(!rs.next()){
+        if (!rs.next()) {
             System.out.println("No results for Found!");
         }
 
@@ -183,9 +192,12 @@ public class App {
         }
     }
 
-    public static void displayProductsByCategory(Connection connection, int categoryId) {
+    public static void displayProductsByCategory(BasicDataSource datasource, int categoryId) {
 
         try (
+                //get a new connection from the pool for this query
+                Connection connection = datasource.getConnection();
+
                 // initialize the preparedStatement
                 PreparedStatement preparedStatement = connection.prepareStatement(
                         "SELECT " +
